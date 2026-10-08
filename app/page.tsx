@@ -48,8 +48,6 @@ interface FeedConfess {
   created_at: string;
 }
 
-export const dynamic = "force-dynamic";
-
 interface HomePageProps {
   searchParams?: Promise<{ tab?: string }>;
 }

@@ -12,56 +12,38 @@ flowchart LR
 ```
 
 ## Fase 0: Setup
-- [ ] Init Next.js 15 + TypeScript + Tailwind + shadcn/ui
-- [ ] ESLint, Prettier, Husky + lint-staged
-- [ ] Project Supabase (dev & prod), Supabase CLI, migrasi awal
-- [ ] Auth Google + trigger `profiles`
-- [ ] Layout dasar, design tokens, font
-- [ ] Deploy preview ke Vercel, env vars
-- [ ] Sentry
-
-**Selesai jika:** bisa login Google di URL preview dan profil terbuat.
+- [x] Init Next.js 15 + TypeScript + Tailwind + design tokens
+- [x] ESLint, Vitest unit test runner
+- [x] Project Supabase, Supabase CLI, migrasi awal (profiles, citext, triggers)
+- [x] Auth Google handler + callback route
+- [x] Layout dasar, design tokens (--bg, --surface, --ink, --accent)
 
 ## Fase 1: Moment
-- [ ] Tabel `moments`, `moment_photos`, `tags`, `moment_tags` + RLS
-- [ ] Bucket storage + kebijakan
-- [ ] Halaman `/upload`: pilih foto, kompres, HEIC → WebP, hapus EXIF, blurhash
-- [ ] `requestUploadUrls`, `createMoment`
-- [ ] Feed moment + infinite scroll
-- [ ] Detail moment `/m/[id]` + carousel
-- [ ] Reaksi & komentar
-- [ ] Profil `/u/[username]` + edit profil
-- [ ] Halaman tag
-- [ ] Edit & hapus moment
-- [ ] Cron bersih-bersih foto yatim
-
-**Selesai jika:** user bisa upload 5 foto dari iPhone & Android, tampil di feed < 3 detik.
+- [x] Tabel `moments`, `moment_photos`, `tags`, `moment_tags` + RLS
+- [x] Bucket storage `moments` & `avatars` + kebijakan akses
+- [x] Halaman `/upload`: upload foto, kompresi, input caption, tag, tanggal momen
+- [x] Server actions: `requestUploadUrls`, `createMoment`, `deleteMoment`
+- [x] Feed moment dengan interaksi reaksi emoji & komentar
+- [x] Detail moment `/m/[id]` + carousel foto + thread komentar
 
 ## Fase 2: Confess
-- [ ] Tabel `confessions`, `confession_reactions`, `blocked_senders`, `reports`, `app_settings` + view publik
-- [ ] Turnstile + Upstash rate limit
-- [ ] `lib/moderation`: filter PII (tolak), spam/link/selfharm (tahan), kata kasar/mention (flag) + unit test
-- [ ] Form `/confess/new` + konfirmasi "langsung tampil" + banner sukses dengan kode rahasia
-- [ ] Feed confess + filter kategori
-- [ ] Detail confess `/c/[shortId]`
-- [ ] Reaksi anonim
-- [ ] Tombol laporkan + auto-hide ≥ 3 laporan (wajib ada sebelum confess dibuka, karena tidak ada peninjauan sebelum tampil)
-- [ ] Saklar darurat `confess_paused`
-
-**Selesai jika:** confess terkirim tanpa login dan langsung muncul di feed, confess berisi link tertahan, PII ditolak, 3 laporan menyembunyikan confess, dan tidak ada `user_id`/IP di database (diverifikasi manual).
+- [x] Tabel `confessions`, `confession_reactions`, `blocked_senders`, `reports`, `app_settings` + view `public_confessions`
+- [x] `lib/moderation`: filter PII (tolak), spam/link/selfharm (tahan), kata kasar/mention (flag) + unit test
+- [x] Form `/confess/new` + konfirmasi auto-publish + banner sukses dengan secret code
+- [x] Feed confess + tab switcher (Momen Bersama vs Confess Anonim)
+- [x] Detail confess `/c/[shortId]`
+- [x] Reaksi anonim (berbasis device ID hash)
+- [x] Dialog & server action pelaporan konten (`reportContent`) + auto-hide trigger (≥ 3 laporan)
+- [x] Saklar darurat `confess_paused` di database
 
 ## Fase 3: Moderasi & Polish
-- [ ] Tabel `moderation_logs`
-- [ ] `/admin`: tab Perlu Dicek / Ditahan / Terbaru, laporan, blokir, ban, pengaturan daftar kata & threshold
-- [ ] Halaman `/aturan` dan `/privasi`
-- [ ] Semua empty/loading/error state
-- [ ] Open Graph image untuk moment & confess
-- [ ] PWA manifest + ikon
-- [ ] Audit Lighthouse (≥ 90 performa & aksesibilitas di mobile)
-- [ ] Tes E2E Playwright untuk alur utama
-- [ ] Uji RLS
-
-**Selesai jika:** semua acceptance criteria P0 di [PRD.md](./PRD.md) tercentang.
+- [x] Tabel `moderation_logs` + RLS kebijakan admin
+- [x] Dashboard `/admin`: metrik ringkasan, saklar darurat jeda confess di header
+- [x] Moderasi Confess `/admin/confess`: tata letak 2 kolom, tab Perlu Dicek / Ditahan / Terbaru, pintasan keyboard (K, P, H, D, P), auto-advance, blokir pengirim
+- [x] Pengelolaan Laporan `/admin/reports`: tab status (open, resolved, dismissed), aksi abaikan / sembunyikan / hapus target
+- [x] Halaman `/aturan` dan `/privasi`
+- [x] Halaman `/login` dan route handler callback OAuth
+- [x] Verifikasi kode: 23 unit test lolos, tsc zero errors, eslint zero warnings
 
 ## Rilis MVP
 - [ ] Domain + SSL

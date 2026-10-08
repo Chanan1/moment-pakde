@@ -2,7 +2,12 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { SubmitConfessSchema, SubmitConfessInput } from "@/lib/validation/confess";
+import {
+  SubmitConfessSchema,
+  SubmitConfessInput,
+  ManageConfessSchema,
+  ManageConfessInput,
+} from "@/lib/validation/confess";
 import { inspectConfess } from "@/lib/moderation/filter";
 import { generateSenderHash, hashSecretCode } from "@/lib/fingerprint";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -224,3 +229,134 @@ export async function toggleConfessReaction(
     };
   }
 }
+
+export interface ConfessStatusResult {
+  shortId: string;
+  status: "pending" | "published" | "hidden" | "removed";
+  removalReason: string | null;
+  body: string;
+  category: string;
+  recipient: string | null;
+  createdAt: string;
+}
+
+/**
+ * 3. Periksa Status Moderasi Confess Milik Sendiri (menggunakan Kode Rahasia)
+ */
+export async function checkConfessStatus(
+  input: ManageConfessInput
+): Promise<ActionResult<ConfessStatusResult>> {
+  try {
+    const parsed = ManageConfessSchema.safeParse(input);
+    if (!parsed.success) {
+      return {
+        ok: false,
+        error: "VALIDATION",
+        message: parsed.error.issues[0]?.message || "Input tidak valid",
+      };
+    }
+
+    const { shortId, secretCode } = parsed.data;
+    const cleanSecret = secretCode.trim().toUpperCase();
+    const hashed = hashSecretCode(cleanSecret);
+
+    const supabaseAdmin = createAdminClient();
+    const { data: conf, error } = await supabaseAdmin
+      .from("confessions")
+      .select("id, short_id, body, category, recipient, status, removal_reason, created_at, secret_code_hash")
+      .eq("short_id", shortId.toLowerCase())
+      .single();
+
+    if (error || !conf || conf.secret_code_hash !== hashed) {
+      return {
+        ok: false,
+        error: "UNAUTHORIZED",
+        message: "ID confess atau kode rahasia tidak cocok.",
+      };
+    }
+
+    return {
+      ok: true,
+      data: {
+        shortId: conf.short_id,
+        status: conf.status as ConfessStatusResult["status"],
+        removalReason: conf.removal_reason,
+        body: conf.body,
+        category: conf.category,
+        recipient: conf.recipient,
+        createdAt: conf.created_at,
+      },
+    };
+  } catch (err: unknown) {
+    return {
+      ok: false,
+      error: "INTERNAL",
+      message: err instanceof Error ? err.message : "Terjadi kesalahan saat memeriksa status",
+    };
+  }
+}
+
+/**
+ * 4. Hapus / Tarik Kembali Confess Sendiri (menggunakan Kode Rahasia)
+ */
+export async function deleteOwnConfess(
+  input: ManageConfessInput
+): Promise<ActionResult<{ ok: true }>> {
+  try {
+    const parsed = ManageConfessSchema.safeParse(input);
+    if (!parsed.success) {
+      return {
+        ok: false,
+        error: "VALIDATION",
+        message: parsed.error.issues[0]?.message || "Input tidak valid",
+      };
+    }
+
+    const { shortId, secretCode } = parsed.data;
+    const cleanSecret = secretCode.trim().toUpperCase();
+    const hashed = hashSecretCode(cleanSecret);
+
+    const supabaseAdmin = createAdminClient();
+    const { data: conf, error } = await supabaseAdmin
+      .from("confessions")
+      .select("id, short_id, secret_code_hash")
+      .eq("short_id", shortId.toLowerCase())
+      .single();
+
+    if (error || !conf || conf.secret_code_hash !== hashed) {
+      return {
+        ok: false,
+        error: "UNAUTHORIZED",
+        message: "ID confess atau kode rahasia tidak cocok.",
+      };
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from("confessions")
+      .update({
+        status: "removed",
+        removal_reason: "Dihapus oleh pengirim sendiri",
+      })
+      .eq("id", conf.id);
+
+    if (updateError) {
+      return {
+        ok: false,
+        error: "INTERNAL",
+        message: "Gagal menghapus confess",
+      };
+    }
+
+    revalidatePath("/");
+    revalidatePath(`/c/${shortId.toLowerCase()}`);
+
+    return { ok: true, data: { ok: true } };
+  } catch (err: unknown) {
+    return {
+      ok: false,
+      error: "INTERNAL",
+      message: err instanceof Error ? err.message : "Terjadi kesalahan saat menghapus confess",
+    };
+  }
+}
+

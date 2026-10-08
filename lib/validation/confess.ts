@@ -31,3 +31,19 @@ export const SubmitConfessSchema = z.object({
 });
 
 export type SubmitConfessInput = z.infer<typeof SubmitConfessSchema>;
+
+export const ManageConfessSchema = z.object({
+  shortId: z
+    .string()
+    .trim()
+    .min(3, "ID confess tidak valid")
+    .max(20, "ID confess tidak valid"),
+  secretCode: z
+    .string()
+    .trim()
+    .min(4, "Kode rahasia tidak valid")
+    .max(30, "Kode rahasia tidak valid"),
+});
+
+export type ManageConfessInput = z.infer<typeof ManageConfessSchema>;
+

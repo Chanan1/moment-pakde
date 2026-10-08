@@ -85,7 +85,12 @@ export default function NewConfessPage() {
             <span>Kembali</span>
           </Link>
           <h1 className="text-sm font-semibold">Tulis Confess</h1>
-          <div className="w-10" />
+          <Link
+            href="/confess/manage"
+            className="text-xs font-semibold text-[var(--accent)] hover:underline"
+          >
+            Cek Kode
+          </Link>
         </div>
       </header>
 

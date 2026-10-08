@@ -266,8 +266,178 @@ export interface Database {
           }
         ];
       };
+      confessions: {
+        Row: {
+          id: string;
+          short_id: string;
+          body: string;
+          recipient: string | null;
+          category: string;
+          status: "pending" | "published" | "hidden" | "removed";
+          removal_reason: string | null;
+          sender_hash: string;
+          secret_code_hash: string | null;
+          auto_flags: string[];
+          reviewed_at: string | null;
+          reaction_count: number;
+          report_count: number;
+          created_at: string;
+          published_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          short_id: string;
+          body: string;
+          recipient?: string | null;
+          category: string;
+          status?: "pending" | "published" | "hidden" | "removed";
+          removal_reason?: string | null;
+          sender_hash: string;
+          secret_code_hash?: string | null;
+          auto_flags?: string[];
+          reviewed_at?: string | null;
+          reaction_count?: number;
+          report_count?: number;
+          created_at?: string;
+          published_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          short_id?: string;
+          body?: string;
+          recipient?: string | null;
+          category?: string;
+          status?: "pending" | "published" | "hidden" | "removed";
+          removal_reason?: string | null;
+          sender_hash?: string;
+          secret_code_hash?: string | null;
+          auto_flags?: string[];
+          reviewed_at?: string | null;
+          reaction_count?: number;
+          report_count?: number;
+          created_at?: string;
+          published_at?: string | null;
+        };
+        Relationships: [];
+      };
+      confession_reactions: {
+        Row: {
+          confession_id: string;
+          device_hash: string;
+          emoji: string;
+          created_at: string;
+        };
+        Insert: {
+          confession_id: string;
+          device_hash: string;
+          emoji: string;
+          created_at?: string;
+        };
+        Update: {
+          confession_id?: string;
+          device_hash?: string;
+          emoji?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "confession_reactions_confession_id_fkey";
+            columns: ["confession_id"];
+            isOneToOne: false;
+            referencedRelation: "confessions";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      reports: {
+        Row: {
+          id: string;
+          target_type: "moment" | "comment" | "confession" | "reply";
+          target_id: string;
+          reason: "spam" | "bullying" | "doxxing" | "company" | "sexual" | "other";
+          note: string | null;
+          reporter_key: string;
+          status: "open" | "resolved" | "dismissed";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          target_type: "moment" | "comment" | "confession" | "reply";
+          target_id: string;
+          reason: "spam" | "bullying" | "doxxing" | "company" | "sexual" | "other";
+          note?: string | null;
+          reporter_key: string;
+          status?: "open" | "resolved" | "dismissed";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          target_type?: "moment" | "comment" | "confession" | "reply";
+          target_id?: string;
+          reason?: "spam" | "bullying" | "doxxing" | "company" | "sexual" | "other";
+          note?: string | null;
+          reporter_key?: string;
+          status?: "open" | "resolved" | "dismissed";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      blocked_senders: {
+        Row: {
+          sender_hash: string;
+          reason: string | null;
+          blocked_by: string | null;
+          expires_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          sender_hash: string;
+          reason?: string | null;
+          blocked_by?: string | null;
+          expires_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          sender_hash?: string;
+          reason?: string | null;
+          blocked_by?: string | null;
+          expires_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      app_settings: {
+        Row: {
+          key: string;
+          value: Json;
+        };
+        Insert: {
+          key: string;
+          value: Json;
+        };
+        Update: {
+          key?: string;
+          value?: Json;
+        };
+        Relationships: [];
+      };
     };
-    Views: Record<string, never>;
+    Views: {
+      public_confessions: {
+        Row: {
+          id: string;
+          short_id: string;
+          body: string;
+          recipient: string | null;
+          category: string;
+          reaction_count: number;
+          report_count: number;
+          created_at: string;
+          published_at: string | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: Record<string, never>;
     Enums: Record<string, never>;
   };

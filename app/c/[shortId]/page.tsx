@@ -3,9 +3,25 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ConfessCard } from "@/components/confess/confess-card";
+import { ConfessReplySection } from "@/components/confess/confess-reply-section";
 
 interface ConfessDetailPageProps {
   params: Promise<{ shortId: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: ConfessDetailPageProps) {
+  const { shortId } = await params;
+  return {
+    title: `Confess #${shortId} — Moment Pakde`,
+    description: "Kumpulan confess dan pesan anonim anak magang MagangHub.",
+    openGraph: {
+      title: `Confess #${shortId} — Moment Pakde`,
+      description: "Kumpulan confess dan pesan anonim anak magang MagangHub.",
+      images: [`/api/og/confess/${shortId}`],
+    },
+  };
 }
 
 export default async function ConfessDetailPage({
@@ -34,6 +50,15 @@ export default async function ConfessDetailPage({
   if (error || !confess) {
     notFound();
   }
+
+  // Ambil balasan yang berstatus published
+  const { data: rawReplies } = await supabase
+    .from("public_confession_replies")
+    .select("id, body, created_at")
+    .eq("confession_id", confess.id)
+    .order("created_at", { ascending: true });
+
+  const replies = rawReplies || [];
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)]">
@@ -64,12 +89,27 @@ export default async function ConfessDetailPage({
           createdAt={confess.created_at}
         />
 
-        <div className="flex justify-center">
+        {/* Bagian Balasan Anonim */}
+        <ConfessReplySection
+          confessionId={confess.id}
+          initialReplies={replies}
+        />
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <a
+            href={`/api/og/confess/${confess.short_id}?format=story`}
+            target="_blank"
+            rel="noopener noreferrer"
+            download={`confess-${confess.short_id}-story.png`}
+            className="w-full sm:w-auto text-center px-5 py-2.5 rounded-full text-xs font-semibold border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--ink)] transition-colors"
+          >
+            📸 Buka Kartu Story IG (9:16)
+          </a>
           <Link
             href="/confess/new"
-            className="px-5 py-2.5 rounded-full text-xs font-semibold bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] transition-colors shadow-xs"
+            className="w-full sm:w-auto text-center px-5 py-2.5 rounded-full text-xs font-semibold bg-[var(--accent)] text-white hover:opacity-90 transition-opacity shadow-xs"
           >
-            Tulis Confess Kamu Sendiri
+            Tulis Confess Sendiri
           </Link>
         </div>
       </main>

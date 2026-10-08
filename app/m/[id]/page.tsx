@@ -27,6 +27,19 @@ interface MomentDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
+export async function generateMetadata({ params }: MomentDetailPageProps) {
+  const { id } = await params;
+  return {
+    title: "Momen Magang — Moment Pakde",
+    description: "Cerita dan kenangan magang seru di komunitas MagangHub.",
+    openGraph: {
+      title: "Momen Magang — Moment Pakde",
+      description: "Cerita dan kenangan magang seru di komunitas MagangHub.",
+      images: [`/api/og/moment/${id}`],
+    },
+  };
+}
+
 export default async function MomentDetailPage({ params }: MomentDetailPageProps) {
   const { id } = await params;
   const supabase = await createClient();

@@ -459,6 +459,50 @@ export interface Database {
           }
         ];
       };
+      confession_replies: {
+        Row: {
+          id: string;
+          confession_id: string;
+          body: string;
+          status: "pending" | "published" | "hidden" | "removed";
+          auto_flags: string[];
+          reviewed_at: string | null;
+          sender_hash: string;
+          report_count: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          confession_id: string;
+          body: string;
+          status?: "pending" | "published" | "hidden" | "removed";
+          auto_flags?: string[];
+          reviewed_at?: string | null;
+          sender_hash: string;
+          report_count?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          confession_id?: string;
+          body?: string;
+          status?: "pending" | "published" | "hidden" | "removed";
+          auto_flags?: string[];
+          reviewed_at?: string | null;
+          sender_hash?: string;
+          report_count?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "confession_replies_confession_id_fkey";
+            columns: ["confession_id"];
+            isOneToOne: false;
+            referencedRelation: "confessions";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       public_confessions: {
@@ -472,6 +516,15 @@ export interface Database {
           report_count: number;
           created_at: string;
           published_at: string | null;
+        };
+        Relationships: [];
+      };
+      public_confession_replies: {
+        Row: {
+          id: string;
+          confession_id: string;
+          body: string;
+          created_at: string;
         };
         Relationships: [];
       };

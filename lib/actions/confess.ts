@@ -7,6 +7,8 @@ import {
   SubmitConfessInput,
   ManageConfessSchema,
   ManageConfessInput,
+  SubmitConfessReplySchema,
+  SubmitConfessReplyInput,
 } from "@/lib/validation/confess";
 import { inspectConfess } from "@/lib/moderation/filter";
 import { generateSenderHash, hashSecretCode } from "@/lib/fingerprint";
@@ -359,4 +361,139 @@ export async function deleteOwnConfess(
     };
   }
 }
+
+/**
+ * 5. Kirim Balasan Anonim ke Confess
+ * Anonimitas mutlak: tidak membaca auth, tidak menyimpan IP mentah.
+ */
+export async function submitConfessReply(
+  input: SubmitConfessReplyInput
+): Promise<
+  ActionResult<{
+    id: string;
+    status: "pending" | "published";
+  }>
+> {
+  try {
+    const parseResult = SubmitConfessReplySchema.safeParse(input);
+    if (!parseResult.success) {
+      return {
+        ok: false,
+        error: "VALIDATION",
+        message: parseResult.error.issues[0]?.message || "Input tidak valid",
+      };
+    }
+
+    const { confessionId, body } = parseResult.data;
+
+    const supabaseAdmin = createAdminClient();
+
+    // Cek saklar darurat jeda confess
+    const { data: pausedSetting } = await supabaseAdmin
+      .from("app_settings")
+      .select("value")
+      .eq("key", "confess_paused")
+      .single();
+
+    if (pausedSetting && pausedSetting.value === true) {
+      return {
+        ok: false,
+        error: "FORBIDDEN",
+        message: "Pengiriman balasan confess sedang diistirahatkan sementara.",
+      };
+    }
+
+    // Ambil header untuk kalkulasi fingerprint terlindungi (tanpa me-log IP)
+    const headerList = await headers();
+    const forwardedFor = headerList.get("x-forwarded-for");
+    const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : "127.0.0.1";
+    const userAgent = headerList.get("user-agent") || "unknown";
+    const senderHash = generateSenderHash(ip, userAgent);
+
+    // Cek apakah sender diblokir
+    const { data: blocked } = await supabaseAdmin
+      .from("blocked_senders")
+      .select("expires_at")
+      .eq("sender_hash", senderHash)
+      .single();
+
+    if (blocked) {
+      const now = new Date();
+      if (!blocked.expires_at || new Date(blocked.expires_at) > now) {
+        return {
+          ok: false,
+          error: "BLOCKED",
+          message: "Perangkat ini dibatasi dari pengiriman pesan.",
+        };
+      }
+    }
+
+    // Cek apakah target confess ada dan masih terbit
+    const { data: targetConfess, error: confError } = await supabaseAdmin
+      .from("confessions")
+      .select("id, short_id, status")
+      .eq("id", confessionId)
+      .single();
+
+    if (confError || !targetConfess || targetConfess.status === "removed") {
+      return {
+        ok: false,
+        error: "NOT_FOUND",
+        message: "Confess tidak ditemukan atau sudah dihapus.",
+      };
+    }
+
+    // Moderasi otomatis pada balasan
+    const modResult = inspectConfess(body);
+    if (modResult.hasPII) {
+      return {
+        ok: false,
+        error: "PII_DETECTED",
+        message:
+          "Sepertinya ada data pribadi (HP/NIK/Email) pada balasanmu. Demi keamanan, harap hapus terlebih dahulu ya.",
+      };
+    }
+
+    const status: "pending" | "published" = modResult.shouldHold
+      ? "pending"
+      : "published";
+
+    const { data: reply, error: insertError } = await supabaseAdmin
+      .from("confession_replies")
+      .insert({
+        confession_id: confessionId,
+        body,
+        status,
+        sender_hash: senderHash,
+        auto_flags: modResult.allFlags,
+      })
+      .select("id")
+      .single();
+
+    if (insertError || !reply) {
+      return {
+        ok: false,
+        error: "INTERNAL",
+        message: "Gagal mengirim balasan.",
+      };
+    }
+
+    revalidatePath(`/c/${targetConfess.short_id}`);
+
+    return {
+      ok: true,
+      data: {
+        id: reply.id,
+        status,
+      },
+    };
+  } catch (err: unknown) {
+    return {
+      ok: false,
+      error: "INTERNAL",
+      message: err instanceof Error ? err.message : "Terjadi kesalahan saat memproses balasan",
+    };
+  }
+}
+
 

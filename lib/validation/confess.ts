@@ -47,3 +47,16 @@ export const ManageConfessSchema = z.object({
 
 export type ManageConfessInput = z.infer<typeof ManageConfessSchema>;
 
+export const SubmitConfessReplySchema = z.object({
+  confessionId: z.string().uuid("ID confess tidak valid"),
+  body: z
+    .string()
+    .trim()
+    .min(1, "Balasan tidak boleh kosong")
+    .max(500, "Balasan maksimal 500 karakter"),
+  turnstileToken: z.string().min(1, "Harap selesaikan verifikasi captcha"),
+});
+
+export type SubmitConfessReplyInput = z.infer<typeof SubmitConfessReplySchema>;
+
+

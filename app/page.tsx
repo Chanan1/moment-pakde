@@ -60,6 +60,28 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let userProfile: {
+    username: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    role: "user" | "moderator" | "admin";
+  } | null = null;
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username, display_name, avatar_url, role")
+      .eq("id", user.id)
+      .single();
+    if (profile) {
+      userProfile = profile;
+    }
+  }
+
   // Ambil data sesuai tab yang aktif
   let moments: FeedMoment[] = [];
   let confessions: FeedConfess[] = [];
@@ -138,12 +160,36 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Link
-              href="/login"
-              className="text-xs font-medium px-3 py-1.5 rounded-full border border-[var(--line)] bg-[var(--surface)] hover:bg-[var(--line)] transition-colors"
-            >
-              Masuk
-            </Link>
+            {userProfile ? (
+              <>
+                {(userProfile.role === "admin" || userProfile.role === "moderator") && (
+                  <Link
+                    href="/admin"
+                    className="text-xs font-semibold px-2.5 py-1.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
+                  >
+                    🛡️ Admin
+                  </Link>
+                )}
+                <span className="text-xs font-medium text-[var(--ink-secondary)]">
+                  @{userProfile.username}
+                </span>
+                <form action="/auth/signout" method="POST">
+                  <button
+                    type="submit"
+                    className="text-xs text-[var(--ink-muted)] hover:text-red-400 transition-colors cursor-pointer"
+                  >
+                    Keluar
+                  </button>
+                </form>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="text-xs font-medium px-3 py-1.5 rounded-full border border-[var(--line)] bg-[var(--surface)] hover:bg-[var(--line)] transition-colors"
+              >
+                Masuk
+              </Link>
+            )}
           </div>
         </div>
       </header>

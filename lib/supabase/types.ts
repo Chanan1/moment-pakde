@@ -421,6 +421,44 @@ export interface Database {
         };
         Relationships: [];
       };
+      moderation_logs: {
+        Row: {
+          id: string;
+          admin_id: string;
+          action: "review" | "publish" | "hide" | "restore" | "remove" | "ban" | "block" | "dismiss" | "settings";
+          target_type: "confession" | "moment" | "comment" | "reply" | "user" | "sender" | "settings";
+          target_id: string;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          admin_id: string;
+          action: "review" | "publish" | "hide" | "restore" | "remove" | "ban" | "block" | "dismiss" | "settings";
+          target_type: "confession" | "moment" | "comment" | "reply" | "user" | "sender" | "settings";
+          target_id: string;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          admin_id?: string;
+          action?: "review" | "publish" | "hide" | "restore" | "remove" | "ban" | "block" | "dismiss" | "settings";
+          target_type?: "confession" | "moment" | "comment" | "reply" | "user" | "sender" | "settings";
+          target_id?: string;
+          note?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "moderation_logs_admin_id_fkey";
+            columns: ["admin_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       public_confessions: {

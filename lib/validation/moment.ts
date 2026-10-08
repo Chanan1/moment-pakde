@@ -10,7 +10,12 @@ export const CreateMomentSchema = z.object({
     )
     .max(10, "Maksimal 10 tag")
     .default([]),
-  momentDate: z.coerce.date().max(new Date(), "Tanggal momen tidak boleh di masa depan"),
+  momentDate: z.coerce
+    .date()
+    .refine(
+      (d) => d.getTime() <= Date.now() + 24 * 60 * 60 * 1000,
+      "Tanggal momen tidak boleh di masa depan"
+    ),
   location: z.string().max(100, "Lokasi maksimal 100 karakter").optional(),
   photos: z
     .array(

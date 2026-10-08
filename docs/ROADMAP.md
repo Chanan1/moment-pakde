@@ -47,17 +47,20 @@ flowchart LR
 
 ## Rilis MVP
 - [ ] Domain + SSL
-- [ ] Seed konten awal (10–20 moment dari tim) agar feed tidak kosong
+- [x] Seed konten awal (`supabase/seed.sql` 5 profil, 3 momen, 5 confess realistis)
 - [ ] Tunjuk 2–3 moderator dengan jadwal cek minimal 2x sehari
 - [ ] Soft launch ke 1–2 batch/grup MagangHub selama 1 minggu, lalu sebar ke seluruh komunitas
 
-## Fase 4: Pasca-MVP (P1)
-- [ ] Kode rahasia: cek status & hapus confess sendiri
-- [ ] Balasan anonim di confess
-- [ ] Kartu confess untuk story IG
+## Fase 4: Fitur Ekosistem (P1)
+- [x] Kode rahasia: cek status & hapus confess sendiri (`/confess/manage`)
+- [x] Balasan anonim di confess (`confession_replies` & UI balasan langsung)
+- [x] Kartu confess untuk story IG (9:16) & generator Open Graph image (`/api/og/confess/[shortId]`)
+- [x] Halaman & API Tag Momen (`/tag/[slug]` & `/api/tag/[slug]`)
+- [x] Halaman profil pengguna & editor bio (`/u/[username]`)
+- [x] PWA Manifest (`/manifest.webmanifest`)
 - [ ] Pencarian
 - [ ] Notifikasi in-app
-- [ ] Tandai user di moment, lokasi
+- [ ] Tandai user di moment
 - [ ] Urutan "Populer minggu ini"
 - [ ] Mode gelap
 - [ ] Login magic link
